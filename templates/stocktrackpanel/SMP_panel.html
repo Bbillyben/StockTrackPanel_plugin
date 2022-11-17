@@ -1,0 +1,44 @@
+{% load i18n %}
+{% load static %}
+<div id='SMP-tracking-table-toolbar'>
+    <div class='btn-group'>
+        {% include "filter_list.html" with id="smp_track" %}
+    </div>
+</div>
+<table
+class='table table-striped table-condensed'
+id="SMP_track_table"
+data-id-table="SMP_track_table"
+data-toolbar='#SMP-tracking-table-toolbar'
+data-url="{{dataUrl}}"
+>
+    <thead class="">
+        <tr>
+            <th data-sortable="true" class="th-inner sortable both" data-field="item_detail.part_name" >
+                {% trans 'Item' %}
+            </th>
+            <th data-sortable="true" class="th-inner sortable both" data-field="item_detail.batch" >
+                {% trans 'Batch' %}
+            </th>
+            <th data-sortable="true" class="th-inner sortable both" data-field="item_detail.serial" >
+                {% trans 'Serial' %}
+            </th>
+            <th data-sortable="true" class="th-inner sortable both" data-field="item_detail.location_detail.pathstring" >
+                {% trans 'Location' %}
+            </th>
+            <th data-sortable="true" class="th-inner sortable both" data-field="date">
+                {% trans 'Date' %}
+            </th>
+
+            <th data-sortable="true" class="th-inner sortable both" data-field="label">
+                {% trans 'Type' %}
+            </th>
+            <th data-sortable="true" class="th-inner sortable both" data-field="user_detail.username">
+                {% trans 'User' %}
+            </th>
+        </tr>
+    </thead>
+    <tbody>
+
+    </tbody>
+</table>
