@@ -101,7 +101,22 @@ class SMPTrackFilter(rest_filters.FilterSet):
         
 
 ### ------------------------------------------- Resource Class ------------------------------------------------ ###
-
+class DeltaWidget(widgets.CharWidget):
+    def render(self, value, obj=None):
+        rem=value.get('removed', None)
+        if rem is not None:
+            return -rem
+        added=value.get('added', None)
+        if added is not None:
+            return added
+        
+        quantity=value.get('quantity', None)
+        if quantity is not None:
+            return quantity
+        
+        return str(value)
+    
+    
 class SMPTrackResource(InvenTreeResource):
     """Class for managing import / export of PurchaseOrder data."""
 
@@ -116,7 +131,7 @@ class SMPTrackResource(InvenTreeResource):
         widget=widgets.ForeignKeyWidget(StockItem, 'batch'), readonly=True
         )
     quantity = Field(
-        column_name=_('quantity'),
+        column_name=_('quantity in stock'),
         attribute='item', 
         widget=widgets.ForeignKeyWidget(StockItem, 'quantity'), readonly=True
         )
@@ -135,10 +150,21 @@ class SMPTrackResource(InvenTreeResource):
         attribute='user', 
         widget=widgets.ForeignKeyWidget(User, 'username'), readonly=True
         )
+    deltas = Field(
+        column_name=_('Delta'),
+        attribute='deltas', 
+        widget=DeltaWidget(), readonly=True
+        )
+    
+    
     def export(self, queryset=None):
         fetched_queryset = list(queryset)
         return super().export(fetched_queryset)
-
+    def before_export(self, queryset, *args, **kwargs):
+        """
+        Override to add additional logic. Does nothing by default.
+        """
+        pass    
     class Meta:
         """Metaclass"""
         model = StockItemTracking
@@ -148,10 +174,10 @@ class SMPTrackResource(InvenTreeResource):
             'id',
             'tracking_type', 
             'item', 
-            'deltas',
+            #'deltas',
             'metadata',
         ]
-        export_order=['itemName', 'batch', 'date', 'label', 'quantity', 'location' , 'notes','user', ]
+        export_order=['itemName', 'batch', 'date', 'label', 'deltas',  'location' ,'quantity', 'notes','user', ]
 
 ### ------------------------------------------- View Class ------------------------------------------------ ###
 class SMPTrackViewSet(View):
