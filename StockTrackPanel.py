@@ -112,8 +112,8 @@ class StockTrackPanel(PanelMixin, SettingsMixin, UrlsMixin, InvenTreePlugin):
         # allTrack=SMPviews.SMPTrackViewSet.as_view()
     
         SMP_URL=[
-            path('track/', SMPviews.SMPTrackViewSet.as_view(), name='track-list'),
-            path('track/location/<loc>/', SMPviews.SMPTrackViewSet.as_view(), name='track-location'),      
+            path('track/', SMPviews.SMPTrackViewSet.get_track, name='track-list'),
+            path('track/location/<loc>/', SMPviews.SMPTrackViewSet.get_track, name='track-location'),      
         ]
         # SMP_URL=[
         #     path('track/', SMPviews.get_SMP_list, name='track-list'),

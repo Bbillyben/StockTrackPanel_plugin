@@ -222,7 +222,10 @@ class SMPTrackViewSet(View):
         filename = f"StockTrack.{export_format}"
 
         return DownloadFile(filedata, filename)
-
+    
+    def get_track(request,*args, **kwargs):
+        return SMPTrackViewSet().get(request, *args, **kwargs)
+    
     def get(self, request, *args, **kwargs):
         print('request : '+str(request))
         print('args : '+str(args))
@@ -263,99 +266,5 @@ class SMPTrackViewSet(View):
         print('[SMPTrackViewSet] export :'+str(export))
         if export is not None:
             return self.download_queryset(trackObj, export)
-        
-        return  JsonResponse(SMP_StockTrackSerializer(trackObj, many=True).data, safe=False)
-
-    
-    
-def SMP_filter_queryset(params, queryset):
-        # params = self.request.query_params
-        # queryset = super().filter_queryset(queryset)
-        
-        name = params.get('username', None)
-        print("[SMPTrackViewSet.filter_queryset] username:"+str(name))
-        if name is not None:
-            queryset = queryset.filter(user__username__icontains=name)
-        
-        
-        tracktype = params.get('tracktype', None)
-        print("[SMPTrackViewSet.filter_queryset] tracktype:"+str(tracktype))
-        if tracktype is not None:
-            queryset = queryset.filter(tracking_type=tracktype)
-        
-        lastdate = params.get('lastdate', None)
-        print("[SMPTrackViewSet.filter_queryset] lastdate:"+str(lastdate))
-        if str2bool(lastdate) :
-            last_date = queryset.latest('date').date
-            if not last_date:
-                last_date= datetime.datetime.now()
-            max_date=datetime.datetime(last_date.year, last_date.month, last_date.day)
-            print('--> max date : '+str(max_date))
-            queryset = queryset.filter(date__gte=max_date)
-        
-        print('[SMPTrackViewSet] filter_queryset END')
-        return queryset
-def SMP_get_queryset():
-        
-        # from plugins.StockTrackPanel_plugin.StockTrackPanel import StockTrackPanel
-        # print('[SMPTrackViewSet] get_queryset')
-        # setSMP = StockTrackPanel.get_setting(StockTrackPanel(), key='MONTH_FOLLOW')
-        # if setSMP:
-        #     setSMP=int(setSMP)
-        # else:
-        #     setSMP = 2
-        # last_date = StockItemTracking.objects.latest('date').date
-        # print(' -> last Date :'+str(last_date))
-        
-        # if not last_date:
-        #         last_date= datetime.datetime.now()   
-        # dateLim = last_date+relativedelta(months=-setSMP)
-        # print(' -> dateLim :'+str(dateLim))
-        
-        # return StockItemTracking.objects.prefetch_related('item').filter(date__gte=dateLim)
-        
-        return StockItemTracking.objects.prefetch_related('item')   
-
-def SMP_download_queryset(self, queryset, export_format):
-        """Download the filtered queryset as a data file"""
-        print('[SMPTrackViewSet] download_queryset call')
-        dataset = SMPTrackResource().export(queryset=queryset)
-
-        filedata = dataset.export(export_format)
-
-        filename = f"StockTrack.{export_format}"
-
-        return DownloadFile(filedata, filename) 
-        
-@api_view(['GET'])
-def get_SMP_list(request):
-    params = request.GET
-    trackObj = SMP_filter_queryset(params, SMP_get_queryset())
-    export = params.get('export', None)
-    print('[SMPTrackViewSet] export :'+str(export))
-    if export is not None:
-        return SMP_download_queryset(trackObj, export)
-    
-    return  JsonResponse(SMP_StockTrackSerializer(trackObj, many=True).data, safe=False)
-
-@api_view(['GET'])
-def get_SMP_location(request, loc=None):
-        # print('[SMPTrackFilter] / location :'+str(loc))
-        params =  request.GET
-        
-        trackObj = SMP_filter_queryset(params, SMP_get_queryset())
-        
-        if loc is not None:
-            locItem= StockLocation.objects.get(pk=loc)
-            # print("stock loc : "+str(loc)+ " / " +str(locItem))
-            if loc:
-                locs = locItem.getUniqueChildren(True).values("pk")
-                # print(" -> all locs :" + str(locs))
-                trackObj = trackObj.filter(item__location__in = locs)
-                
-        export = params.get('export', None)
-        print('[SMPTrackViewSet] export :'+str(export))
-        if export is not None:
-            return SMP_download_queryset(trackObj, export)
         
         return  JsonResponse(SMP_StockTrackSerializer(trackObj, many=True).data, safe=False)
