@@ -1,32 +1,12 @@
 from plugin import InvenTreePlugin
 from plugin.mixins import PanelMixin, SettingsMixin
 from plugin.base.integration.mixins import UrlsMixin
-from django.core.validators import MaxValueValidator, MinValueValidator
+from django.core.validators import  MinValueValidator
 from stock.views import StockLocationDetail, StockIndex
 from django.template.loader import render_to_string
-from django.http import HttpResponse, JsonResponse
-from django.urls import path, re_path, reverse
-from django.conf.urls import include
-from django.db.models import Max, F 
+from django.urls import path, reverse
 from django.utils.translation import gettext as _
 
-
-from stock.models import StockItem, StockItemTracking, StockLocation
-from InvenTree.serializers import InvenTreeDecimalField, InvenTreeModelSerializer,UserSerializer
-from stock.serializers import LocationBriefSerializer
-from rest_framework import serializers, viewsets, permissions, routers
-from rest_framework.decorators import action
-from django_filters import rest_framework as rest_filters
-
-from InvenTree.api import APIDownloadMixin
-from InvenTree.helpers import DownloadFile, str2bool
-from InvenTree.admin import InvenTreeResource
-from InvenTree.status_codes import StockHistoryCode
-from import_export.fields import Field
-import import_export.widgets as widgets
-from django.contrib.auth.models import User
-
-import datetime
 
 from plugins.StockTrackPanel_plugin import views as SMPviews
     
@@ -44,7 +24,7 @@ class StockTrackPanel(PanelMixin, SettingsMixin, UrlsMixin, InvenTreePlugin):
     SETTINGS = {
         'MONTH_FOLLOW': {
             'name': 'Number of Month to follow',
-            'description': 'time scope in month to visualize from last entry',
+            'description': 'number ofmonth from last entry to display in Stock Track Panel',
             'default': 1,
             'validator': MinValueValidator(1),
         },
@@ -62,7 +42,6 @@ class StockTrackPanel(PanelMixin, SettingsMixin, UrlsMixin, InvenTreePlugin):
             if isinstance(view, StockLocationDetail):
                 loc=view.get_object()
                 urlTrac=reverse('plugin:stocktrack:track-location', kwargs={'loc': loc.pk})
-                # print("  --- > objc url :"+str(urlTrac))
             else:
                 urlTrac=reverse('plugin:stocktrack:track-list')
                 
@@ -82,43 +61,12 @@ class StockTrackPanel(PanelMixin, SettingsMixin, UrlsMixin, InvenTreePlugin):
             ]
         return panels
 
-    # def getSMPSerializeTrack(self, request, loc=None):
-    #     strLoc = "The location called is :"+str(loc)
-    #     trackObj = StockItemTracking.objects.prefetch_related('item').all()
-        
-    #     if loc is not None:
-    #         locI= StockLocation.objects.get(pk=location)
-    #         # print("stock loc : "+str(location)+ " / " +str(loc))
-    #         if locI:
-    #             locs = locI .getUniqueChildren(True).values("pk")
-    #             # print(" -> all locs :" + str(locs))
-    #             trackObj = trackObj.filter(item__location__in = locs)
-        
-    #     return  JsonResponse(SMPviews.SMP_StockTrackSerializer(trackObj, many=True).data, safe=False)
-
-
 
     def setup_urls(self):
         # """Urls that are exposed by this plugin."""
-        
-        # router = routers.SimpleRouter()
-        # router.register(r'track', SMPviews.SMPTrackViewSet, basename='track')
-        # return router.urls
-        # # SMP_URL=[
-        #     path('', include(router.urls) , name='track-list'),
-        # ]    
-        
-        
-        # allTrack=SMPviews.SMPTrackViewSet.as_view()
     
         SMP_URL=[
             path('track/', SMPviews.SMPTrackViewSet.get_track, name='track-list'),
             path('track/location/<loc>/', SMPviews.SMPTrackViewSet.get_track, name='track-location'),      
         ]
-        # SMP_URL=[
-        #     path('track/', SMPviews.get_SMP_list, name='track-list'),
-        #     path('track/location/<loc>/', get_SMP_location, name='track-location'),      
-        # ]
-        print('[StockTrackPanel] setup_urls')
-        print(str(SMP_URL))
         return SMP_URL
