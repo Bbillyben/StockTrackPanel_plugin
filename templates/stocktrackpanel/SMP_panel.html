@@ -14,7 +14,7 @@ data-url="{{dataUrl}}"
 >
     <thead class="">
         <tr>
-            <th data-sortable="true" class="th-inner sortable both" data-field="item_detail.part_name" >
+            <th data-sortable="true" class="th-inner sortable both" data-field="item_detail.part_name" data-formatter="SMP_item_formatter">
                 {% trans 'Item' %}
             </th>
             <th data-sortable="true" class="th-inner sortable both" data-field="item_detail.batch" >
@@ -22,6 +22,9 @@ data-url="{{dataUrl}}"
             </th>
             <th data-sortable="true" class="th-inner sortable both" data-field="item_detail.serial" >
                 {% trans 'Serial' %}
+            </th>
+            <th data-sortable="true" class="th-inner sortable both" data-field="item_detail.quantity"  data-formatter="SMP_quantity_formatter">
+                {% trans 'Quantity' %}
             </th>
             <th data-sortable="true" class="th-inner sortable both" data-field="item_detail.location_detail.pathstring" >
                 {% trans 'Location' %}
@@ -42,3 +45,19 @@ data-url="{{dataUrl}}"
 
     </tbody>
 </table>
+<script>
+    function SMP_generete_sid_url(id){
+        return "{% url 'stock-item-detail' pk=1122334455 %}".replace("1122334455", id);
+    }
+    function SMP_generete_part_url(id){
+        return "{% url 'part-detail' pk=1122334455 %}".replace("1122334455", id);
+    }
+    function SMP_item_formatter(value, row, index, field){
+        response ='<a href="'+SMP_generete_part_url(row.item_detail.part)+'" title="'+SMP_generete_part_url(row.item_detail.part)+'">'+value+'</a>'
+        return response;
+    }
+    function SMP_quantity_formatter(value, row, index, field){
+        response ='<a href="'+SMP_generete_sid_url(row.item)+'" title="'+SMP_generete_sid_url(row.item)+'">'+value+'</a>'
+        return response;
+    }
+</script>
