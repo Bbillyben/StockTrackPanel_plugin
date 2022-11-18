@@ -9,13 +9,14 @@ from django.urls import path, re_path, reverse
 from django.conf.urls import include
 from django.db.models import Max, F 
 from django.utils.translation import gettext as _
+from django.views import View
 
 
 from stock.models import StockItem, StockItemTracking, StockLocation
 from InvenTree.serializers import InvenTreeDecimalField, InvenTreeModelSerializer,UserSerializer
 from stock.serializers import LocationBriefSerializer
-from rest_framework import serializers, viewsets, permissions, routers
-from rest_framework.decorators import action
+from rest_framework import serializers, generics, viewsets, permissions, routers
+from rest_framework.decorators import action, api_view
 from django_filters import rest_framework as rest_filters
 
 from InvenTree.api import APIDownloadMixin
@@ -153,15 +154,18 @@ class SMPTrackResource(InvenTreeResource):
         export_order=['itemName', 'batch', 'date', 'label', 'quantity', 'location' , 'notes','user', ]
 
 ### ------------------------------------------- View Class ------------------------------------------------ ###
-class SMPTrackViewSet(APIDownloadMixin, viewsets.ModelViewSet):
+class SMPTrackViewSet(View):
     serializer_class = SMP_StockTrackSerializer
     permission_classes = [permissions.IsAuthenticated]
     filter_backends = (rest_filters.DjangoFilterBackend,)
     filterset_class = SMPTrackFilter
     
+    http_method_names=['get'] 
+    request = None
+     
     def filter_queryset(self, queryset):
-        params = self.request.query_params
-        queryset = super().filter_queryset(queryset)
+        params = self.request.GET
+        # queryset = super().filter_queryset(queryset)
         
         name = params.get('username', None)
         print("[SMPTrackViewSet.filter_queryset] username:"+str(name))
@@ -188,18 +192,25 @@ class SMPTrackViewSet(APIDownloadMixin, viewsets.ModelViewSet):
         return queryset
     
     def get_queryset(self):
-        from plugins.StockTrackPanel_plugin.StockTrackPanel import StockTrackPanel
-        print('[SMPTrackViewSet] get_queryset')
-        setSMP = int(StockTrackPanel.get_setting(StockTrackPanel(), key='MONTH_FOLLOW'))
-        last_date = StockItemTracking.objects.latest('date').date
-        print(' -> last Date :'+str(last_date))
         
-        if not last_date:
-                last_date= datetime.datetime.now()   
-        dateLim = last_date+relativedelta(months=-setSMP)
-        print(' -> dateLim :'+str(dateLim))
+        # from plugins.StockTrackPanel_plugin.StockTrackPanel import StockTrackPanel
+        # print('[SMPTrackViewSet] get_queryset')
+        # setSMP = StockTrackPanel.get_setting(StockTrackPanel(), key='MONTH_FOLLOW')
+        # if setSMP:
+        #     setSMP=int(setSMP)
+        # else:
+        #     setSMP = 2
+        # last_date = StockItemTracking.objects.latest('date').date
+        # print(' -> last Date :'+str(last_date))
         
-        return StockItemTracking.objects.prefetch_related('item').filter(date__gte=dateLim)
+        # if not last_date:
+        #         last_date= datetime.datetime.now()   
+        # dateLim = last_date+relativedelta(months=-setSMP)
+        # print(' -> dateLim :'+str(dateLim))
+        
+        # return StockItemTracking.objects.prefetch_related('item').filter(date__gte=dateLim)
+        
+        return StockItemTracking.objects.prefetch_related('item')
     
     def download_queryset(self, queryset, export_format):
         """Download the filtered queryset as a data file"""
@@ -212,8 +223,19 @@ class SMPTrackViewSet(APIDownloadMixin, viewsets.ModelViewSet):
 
         return DownloadFile(filedata, filename)
 
-    def list(self, request):
-        params = self.request.query_params
+    def get(self, request, *args, **kwargs):
+        print('request : '+str(request))
+        print('args : '+str(args))
+        print('kwargs : '+str(kwargs))
+        self.request = request
+        loc = kwargs.get('loc', None)
+        if loc :
+            return self.location(loc)
+        return self.list()
+        # return HttpResponse('Hello, World!')
+        
+    def list(self):
+        params = self.request.GET
         trackObj = self.filter_queryset(self.get_queryset())
         export = params.get('export', None)
         print('[SMPTrackViewSet] export :'+str(export))
@@ -223,10 +245,9 @@ class SMPTrackViewSet(APIDownloadMixin, viewsets.ModelViewSet):
         return  JsonResponse(SMP_StockTrackSerializer(trackObj, many=True).data, safe=False)
     
     
-    @action(methods=['get'], detail=False,url_path='location/(?P<loc>[^/.]+)', url_name='location')
-    def location(self, request, loc=None):
+    def location(self, loc=None):
         # print('[SMPTrackFilter] / location :'+str(loc))
-        params = self.request.query_params
+        params = self.request.GET
         
         trackObj = self.filter_queryset(self.get_queryset())
         
@@ -244,4 +265,97 @@ class SMPTrackViewSet(APIDownloadMixin, viewsets.ModelViewSet):
             return self.download_queryset(trackObj, export)
         
         return  JsonResponse(SMP_StockTrackSerializer(trackObj, many=True).data, safe=False)
+
     
+    
+def SMP_filter_queryset(params, queryset):
+        # params = self.request.query_params
+        # queryset = super().filter_queryset(queryset)
+        
+        name = params.get('username', None)
+        print("[SMPTrackViewSet.filter_queryset] username:"+str(name))
+        if name is not None:
+            queryset = queryset.filter(user__username__icontains=name)
+        
+        
+        tracktype = params.get('tracktype', None)
+        print("[SMPTrackViewSet.filter_queryset] tracktype:"+str(tracktype))
+        if tracktype is not None:
+            queryset = queryset.filter(tracking_type=tracktype)
+        
+        lastdate = params.get('lastdate', None)
+        print("[SMPTrackViewSet.filter_queryset] lastdate:"+str(lastdate))
+        if str2bool(lastdate) :
+            last_date = queryset.latest('date').date
+            if not last_date:
+                last_date= datetime.datetime.now()
+            max_date=datetime.datetime(last_date.year, last_date.month, last_date.day)
+            print('--> max date : '+str(max_date))
+            queryset = queryset.filter(date__gte=max_date)
+        
+        print('[SMPTrackViewSet] filter_queryset END')
+        return queryset
+def SMP_get_queryset():
+        
+        # from plugins.StockTrackPanel_plugin.StockTrackPanel import StockTrackPanel
+        # print('[SMPTrackViewSet] get_queryset')
+        # setSMP = StockTrackPanel.get_setting(StockTrackPanel(), key='MONTH_FOLLOW')
+        # if setSMP:
+        #     setSMP=int(setSMP)
+        # else:
+        #     setSMP = 2
+        # last_date = StockItemTracking.objects.latest('date').date
+        # print(' -> last Date :'+str(last_date))
+        
+        # if not last_date:
+        #         last_date= datetime.datetime.now()   
+        # dateLim = last_date+relativedelta(months=-setSMP)
+        # print(' -> dateLim :'+str(dateLim))
+        
+        # return StockItemTracking.objects.prefetch_related('item').filter(date__gte=dateLim)
+        
+        return StockItemTracking.objects.prefetch_related('item')   
+
+def SMP_download_queryset(self, queryset, export_format):
+        """Download the filtered queryset as a data file"""
+        print('[SMPTrackViewSet] download_queryset call')
+        dataset = SMPTrackResource().export(queryset=queryset)
+
+        filedata = dataset.export(export_format)
+
+        filename = f"StockTrack.{export_format}"
+
+        return DownloadFile(filedata, filename) 
+        
+@api_view(['GET'])
+def get_SMP_list(request):
+    params = request.GET
+    trackObj = SMP_filter_queryset(params, SMP_get_queryset())
+    export = params.get('export', None)
+    print('[SMPTrackViewSet] export :'+str(export))
+    if export is not None:
+        return SMP_download_queryset(trackObj, export)
+    
+    return  JsonResponse(SMP_StockTrackSerializer(trackObj, many=True).data, safe=False)
+
+@api_view(['GET'])
+def get_SMP_location(request, loc=None):
+        # print('[SMPTrackFilter] / location :'+str(loc))
+        params =  request.GET
+        
+        trackObj = SMP_filter_queryset(params, SMP_get_queryset())
+        
+        if loc is not None:
+            locItem= StockLocation.objects.get(pk=loc)
+            # print("stock loc : "+str(loc)+ " / " +str(locItem))
+            if loc:
+                locs = locItem.getUniqueChildren(True).values("pk")
+                # print(" -> all locs :" + str(locs))
+                trackObj = trackObj.filter(item__location__in = locs)
+                
+        export = params.get('export', None)
+        print('[SMPTrackViewSet] export :'+str(export))
+        if export is not None:
+            return SMP_download_queryset(trackObj, export)
+        
+        return  JsonResponse(SMP_StockTrackSerializer(trackObj, many=True).data, safe=False)

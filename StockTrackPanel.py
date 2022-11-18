@@ -30,10 +30,9 @@ import datetime
 
 from plugins.StockTrackPanel_plugin import views as SMPviews
     
-    
 ### ------------------------------------------- Plugin Class ------------------------------------------------ ###
 
-class StockTrackPanel(PanelMixin, SettingsMixin, UrlsMixin,  InvenTreePlugin):
+class StockTrackPanel(PanelMixin, SettingsMixin, UrlsMixin, InvenTreePlugin):
 
     NAME = "StockTrackPanel"
     SLUG = "stocktrack"
@@ -83,27 +82,43 @@ class StockTrackPanel(PanelMixin, SettingsMixin, UrlsMixin,  InvenTreePlugin):
             ]
         return panels
 
-    # def getSMPSerializeTrack(self, request, location=None):
-    #     strLoc = "The location called is :"+str(location)
+    # def getSMPSerializeTrack(self, request, loc=None):
+    #     strLoc = "The location called is :"+str(loc)
     #     trackObj = StockItemTracking.objects.prefetch_related('item').all()
         
-    #     if location is not None:
-    #         loc= StockLocation.objects.get(pk=location)
+    #     if loc is not None:
+    #         locI= StockLocation.objects.get(pk=location)
     #         # print("stock loc : "+str(location)+ " / " +str(loc))
-    #         if loc:
-    #             locs = loc.getUniqueChildren(True).values("pk")
+    #         if locI:
+    #             locs = locI .getUniqueChildren(True).values("pk")
     #             # print(" -> all locs :" + str(locs))
     #             trackObj = trackObj.filter(item__location__in = locs)
         
-    #     return  JsonResponse(SMP_StockTrackSerializer(trackObj, many=True).data, safe=False)
+    #     return  JsonResponse(SMPviews.SMP_StockTrackSerializer(trackObj, many=True).data, safe=False)
+
 
 
     def setup_urls(self):
-        """Urls that are exposed by this plugin."""
-        router = routers.DefaultRouter()
-
-        router.register(r'track', SMPviews.SMPTrackViewSet, basename='track')
-        return router.urls
+        # """Urls that are exposed by this plugin."""
         
-
-
+        # router = routers.SimpleRouter()
+        # router.register(r'track', SMPviews.SMPTrackViewSet, basename='track')
+        # return router.urls
+        # # SMP_URL=[
+        #     path('', include(router.urls) , name='track-list'),
+        # ]    
+        
+        
+        # allTrack=SMPviews.SMPTrackViewSet.as_view()
+    
+        SMP_URL=[
+            path('track/', SMPviews.SMPTrackViewSet.as_view(), name='track-list'),
+            path('track/location/<loc>/', SMPviews.SMPTrackViewSet.as_view(), name='track-location'),      
+        ]
+        # SMP_URL=[
+        #     path('track/', SMPviews.get_SMP_list, name='track-list'),
+        #     path('track/location/<loc>/', get_SMP_location, name='track-location'),      
+        # ]
+        print('[StockTrackPanel] setup_urls')
+        print(str(SMP_URL))
+        return SMP_URL
