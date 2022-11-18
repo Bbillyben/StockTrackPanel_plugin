@@ -193,24 +193,24 @@ class SMPTrackViewSet(View):
     
     def get_queryset(self):
         
-        # from plugins.StockTrackPanel_plugin.StockTrackPanel import StockTrackPanel
-        # print('[SMPTrackViewSet] get_queryset')
-        # setSMP = StockTrackPanel.get_setting(StockTrackPanel(), key='MONTH_FOLLOW')
-        # if setSMP:
-        #     setSMP=int(setSMP)
-        # else:
-        #     setSMP = 2
-        # last_date = StockItemTracking.objects.latest('date').date
-        # print(' -> last Date :'+str(last_date))
+        from plugins.StockTrackPanel_plugin.StockTrackPanel import StockTrackPanel
+        print('[SMPTrackViewSet] get_queryset')
+        setSMP = StockTrackPanel.get_setting(StockTrackPanel(), key='MONTH_FOLLOW')
+        if setSMP:
+            setSMP=int(setSMP)
+        else:
+            setSMP = 2
+        last_date = StockItemTracking.objects.latest('date').date
+        print(' -> last Date :'+str(last_date))
         
-        # if not last_date:
-        #         last_date= datetime.datetime.now()   
-        # dateLim = last_date+relativedelta(months=-setSMP)
-        # print(' -> dateLim :'+str(dateLim))
+        if not last_date:
+                last_date= datetime.datetime.now()   
+        dateLim = last_date+relativedelta(months=-setSMP)
+        print(' -> dateLim :'+str(dateLim))
         
-        # return StockItemTracking.objects.prefetch_related('item').filter(date__gte=dateLim)
+        return StockItemTracking.objects.prefetch_related('item').filter(date__gte=dateLim)
         
-        return StockItemTracking.objects.prefetch_related('item')
+        # return StockItemTracking.objects.prefetch_related('item')
     
     def download_queryset(self, queryset, export_format):
         """Download the filtered queryset as a data file"""
