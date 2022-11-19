@@ -26,7 +26,11 @@ class SMP_StockItemSerializer(InvenTreeModelSerializer):
     part_name = serializers.CharField(source='part.full_name', read_only=True)
     quantity = InvenTreeDecimalField()
     location_detail = LocationBriefSerializer(source='location', many=False, read_only=True)
-
+    unit = serializers.SerializerMethodField()
+    
+    def get_unit(self,obj):
+        return obj.part.units
+    
     class Meta:
         """Metaclass options."""
 
@@ -38,6 +42,7 @@ class SMP_StockItemSerializer(InvenTreeModelSerializer):
             'location',
             'location_detail',
             'quantity',
+            'unit',
             'batch',
             'serial',
             'supplier_part',
@@ -105,6 +110,11 @@ class SMPTrackResource(InvenTreeResource):
         attribute='item', 
         widget=widgets.ForeignKeyWidget(StockItem, 'batch'), readonly=True
         )
+    serial = Field(
+        column_name=_('Serial'),
+        attribute='item', 
+        widget=widgets.ForeignKeyWidget(StockItem, 'serial'), readonly=True
+        )
     quantity = Field(
         column_name=_('quantity in stock'),
         attribute='item', 
@@ -166,6 +176,14 @@ class SMPTrackViewSet(View):
         tracktype = params.get('tracktype', None)
         if tracktype is not None:
             queryset = queryset.filter(tracking_type=tracktype)
+        
+        batch = params.get('batch', None)
+        if batch is not None:
+            queryset = queryset.filter(item__batch__icontains=batch)
+        
+        serial = params.get('serial', None)
+        if serial is not None:
+            queryset = queryset.filter(item__serial__icontains=serial)
         
         lastdate = params.get('lastdate', None)
         if str2bool(lastdate) :

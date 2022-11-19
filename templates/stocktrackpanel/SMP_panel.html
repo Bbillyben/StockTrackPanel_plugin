@@ -26,7 +26,7 @@ data-url="{{dataUrl}}"
             <th data-sortable="true" class="th-inner sortable both" data-field="item_detail.quantity"  data-formatter="SMP_quantity_formatter">
                 {% trans 'Quantity' %}
             </th>
-            <th data-sortable="true" class="th-inner sortable both" data-field="item_detail.location_detail.pathstring" >
+            <th data-sortable="true" class="th-inner sortable both" data-field="item_detail.location_detail.pathstring" data-formatter="SMP_location_formatter">
                 {% trans 'Location' %}
             </th>
             <th data-sortable="true" class="th-inner sortable both" data-field="date">
@@ -52,12 +52,24 @@ data-url="{{dataUrl}}"
     function SMP_generete_part_url(id){
         return "{% url 'part-detail' pk=1122334455 %}".replace("1122334455", id);
     }
+    function SMP_generete_location_url(id){
+        return "{% url 'stock-location-detail' pk=1122334455 %}".replace("1122334455", id);
+    }
     function SMP_item_formatter(value, row, index, field){
-        response ='<a href="'+SMP_generete_part_url(row.item_detail.part)+'" title="'+SMP_generete_part_url(row.item_detail.part)+'">'+value+'</a>'
+        urlR=SMP_generete_part_url(row.item_detail.part)
+        response ='<a href="'+urlR+'" title="'+urlR+'">'+value+'</a>'
         return response;
     }
     function SMP_quantity_formatter(value, row, index, field){
-        response ='<a href="'+SMP_generete_sid_url(row.item)+'" title="'+SMP_generete_sid_url(row.item)+'">'+value+'</a>'
+        //console.log('[SMP_quantity_formatter]')
+        //console.log('row :'+JSON.stringify(row))
+        urlR=SMP_generete_sid_url(row.item)
+        response ='<a href="'+urlR+'" title="'+urlR+'">'+value+' '+row.item_detail.unit+'</a>'
+        return response;
+    }
+    function SMP_location_formatter(value, row, index, field){
+        urlR = SMP_generete_location_url(row.item_detail.location_detail.pk)
+        response ='<a href="'+urlR+'" title="'+urlR+'">'+value+'</a>'
         return response;
     }
 </script>

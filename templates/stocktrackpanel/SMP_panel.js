@@ -15,6 +15,12 @@ getAvailableTableFilters = function(tableKey) {
             lastdate:{
                 title: '{% trans "Only Last Date" %}',
                 type: 'bool'
+            },
+            batch:{
+                title: '{% trans "Batch" %}'
+            }, 
+            serial:{
+                title: '{% trans "Serial" %}'
             }
         };
      }
