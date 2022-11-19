@@ -23,8 +23,8 @@ data-url="{{dataUrl}}"
             <th data-sortable="true" class="th-inner sortable both" data-field="item_detail.serial" >
                 {% trans 'Serial' %}
             </th>
-            <th data-sortable="true" class="th-inner sortable both" data-field="item_detail.quantity"  data-formatter="SMP_quantity_formatter">
-                {% trans 'Quantity' %}
+            <th data-sortable="true" class="th-inner sortable both" data-field="deltas" data-formatter="SMP_delta_formatter">
+                {% trans 'Delta' %}
             </th>
             <th data-sortable="true" class="th-inner sortable both" data-field="item_detail.location_detail.pathstring" data-formatter="SMP_location_formatter">
                 {% trans 'Location' %}
@@ -35,6 +35,10 @@ data-url="{{dataUrl}}"
 
             <th data-sortable="true" class="th-inner sortable both" data-field="label">
                 {% trans 'Type' %}
+            </th>
+            
+            <th data-sortable="true" class="th-inner sortable both" data-field="item_detail.quantity"  data-formatter="SMP_quantity_formatter">
+                {% trans 'Quantity in Stock' %}
             </th>
             <th data-sortable="true" class="th-inner sortable both" data-field="user_detail.username">
                 {% trans 'User' %}
@@ -71,5 +75,25 @@ data-url="{{dataUrl}}"
         urlR = SMP_generete_location_url(row.item_detail.location_detail.pk)
         response ='<a href="'+urlR+'" title="'+urlR+'">'+value+'</a>'
         return response;
+    }
+    function SMP_delta_formatter(value, row, index, field){
+        console.log('row :'+JSON.stringify(row))
+        urlR=SMP_generete_sid_url(row.item)
+        valStr=""
+        if('removed' in value){
+            valStr = "-"+value["removed"]+' '+row.item_detail.unit
+        }else if('added' in value){
+            valStr = "+"+value["added"]+' '+row.item_detail.unit
+        }else if('quantity' in value){
+            valStr = value["quantity"]+' '+row.item_detail.unit
+        }else if('stockitem' in value){
+            urlR = SMP_generete_sid_url(value["stockitem"])
+            valStr = "{% trans 'Item' %} :" + value["stockitem"]
+        }else(
+            valStr = "-"
+        )
+        response = '<a href="'+urlR+'" title="'+urlR+'">'+valStr+'</a>'
+        return response
+
     }
 </script>

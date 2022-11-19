@@ -159,6 +159,8 @@ class SMPTrackResource(InvenTreeResource):
         export_order=['itemName', 'batch', 'date', 'label', 'deltas',  'location' ,'quantity', 'notes','user', ]
 
 ### ------------------------------------------- View Class ------------------------------------------------ ###
+
+
 class SMPTrackViewSet(View):
     permission_classes = [permissions.IsAuthenticated]
 
