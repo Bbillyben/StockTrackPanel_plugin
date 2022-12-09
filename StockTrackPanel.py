@@ -59,7 +59,7 @@ class StockTrackPanel(PanelMixin, SettingsMixin, UrlsMixin, InvenTreePlugin):
                     'javascript_template': 'stocktrackpanel/SMP_panel.js'
                 }
             ]
-        return panels
+            return panels
 
 
     def setup_urls(self):
