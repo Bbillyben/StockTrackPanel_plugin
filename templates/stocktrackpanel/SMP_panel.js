@@ -16,12 +16,21 @@ getAvailableTableFilters = function(tableKey) {
                 title: '{% trans "Only Last Date" %}',
                 type: 'bool'
             },
+            date_greater:{
+                title: '{% trans "Date Greater than" %}',
+                type: 'date'
+            },
+            date_lesser:{
+                title: '{% trans "Date Lesser than" %}',
+                type: 'date'
+            },
             batch:{
                 title: '{% trans "Batch" %}'
             }, 
             serial:{
                 title: '{% trans "Serial" %}'
-            }
+            },
+
         };
      }
      

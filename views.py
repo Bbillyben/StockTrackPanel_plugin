@@ -1,3 +1,4 @@
+import logging
 from django.template.loader import render_to_string
 from django.http import  JsonResponse
 from django.utils.translation import gettext as _
@@ -17,8 +18,10 @@ import import_export.widgets as widgets
 from django.contrib.auth.models import User
 
 import datetime
+import pytz
 from dateutil.relativedelta import relativedelta
 
+logger = logging.getLogger('inventree')
 ### ------------------------------------------- Serializers Class ------------------------------------------------ ###
 class SMP_StockItemSerializer(InvenTreeModelSerializer):
     """Brief serializers for a StockItem."""
@@ -160,7 +163,6 @@ class SMPTrackResource(InvenTreeResource):
 
 ### ------------------------------------------- View Class ------------------------------------------------ ###
 
-
 class SMPTrackViewSet(View):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -186,6 +188,17 @@ class SMPTrackViewSet(View):
         serial = params.get('serial', None)
         if serial is not None:
             queryset = queryset.filter(item__serial__icontains=serial)
+        
+        
+        dategte = params.get('date_greater', None)
+        if dategte is not None:
+            date_gte = datetime.datetime.fromtimestamp(int(dategte) / 1e3)
+            queryset = queryset.filter(date__gte=date_gte)
+        
+        datelte = params.get('date_lesser', None)
+        if datelte is not None:
+            date_lte = datetime.datetime.fromtimestamp(int(datelte) / 1e3)
+            queryset = queryset.filter(date__lte=date_lte)
         
         lastdate = params.get('lastdate', None)
         if str2bool(lastdate) :

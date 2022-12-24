@@ -4,13 +4,15 @@ from plugin.base.integration.mixins import UrlsMixin
 from django.core.validators import  MinValueValidator
 from stock.views import StockLocationDetail, StockIndex
 from django.template.loader import render_to_string
-from django.urls import path, reverse
+from django.urls import path, reverse,re_path, include
 from django.utils.translation import gettext as _
 
 
 from plugins.StockTrackPanel_plugin import views as SMPviews
-    
+import logging
+logger = logging.getLogger('inventree')
 ### ------------------------------------------- Plugin Class ------------------------------------------------ ###
+
 
 class StockTrackPanel(PanelMixin, SettingsMixin, UrlsMixin, InvenTreePlugin):
 
@@ -29,7 +31,25 @@ class StockTrackPanel(PanelMixin, SettingsMixin, UrlsMixin, InvenTreePlugin):
             'validator': MinValueValidator(1),
         },
     }
-
+    
+    def setup_urls(self):
+        # """Urls that are exposed by this plugin."""
+        logger.debug('[StockTrackPanel] - setup_urls ')
+        SMP_URL=[
+            path('track/', SMPviews.SMPTrackViewSet.get_track, name='track-list'),
+            path('track/location/<loc>/', SMPviews.SMPTrackViewSet.get_track, name='track-location'),      
+        ]
+        return SMP_URL
+    
+    
+    @property
+    def urlpatterns(self):
+        """Urlpatterns for this plugin.""" 
+        logger.debug('[StockTrackPanel] - urlpatterns ')
+        if self.has_urls:
+            return re_path(f'^{self.slug}/', include((self.urls, self.slug)), name=self.slug)
+        return None
+    
     def get_panel_context(self, view, request, context):
         """Returns enriched context."""
         ctx = super().get_panel_context(view, request, context)
@@ -62,11 +82,4 @@ class StockTrackPanel(PanelMixin, SettingsMixin, UrlsMixin, InvenTreePlugin):
             return panels
 
 
-    def setup_urls(self):
-        # """Urls that are exposed by this plugin."""
-    
-        SMP_URL=[
-            path('track/', SMPviews.SMPTrackViewSet.get_track, name='track-list'),
-            path('track/location/<loc>/', SMPviews.SMPTrackViewSet.get_track, name='track-location'),      
-        ]
-        return SMP_URL
+
