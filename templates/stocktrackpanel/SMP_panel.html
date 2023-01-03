@@ -72,8 +72,13 @@ data-url="{{dataUrl}}"
         return response;
     }
     function SMP_location_formatter(value, row, index, field){
-        urlR = SMP_generete_location_url(row.item_detail.location_detail.pk)
-        response ='<a href="'+urlR+'" title="'+urlR+'">'+value+'</a>'
+        if(row.item_detail.location_detail){
+            urlR = SMP_generete_location_url(row.item_detail.location_detail.pk);
+            response ='<a href="'+urlR+'" title="'+urlR+'">'+value+'</a>'
+        }else{
+            response ='-';
+        }
+        
         return response;
     }
     function SMP_delta_formatter(value, row, index, field){
