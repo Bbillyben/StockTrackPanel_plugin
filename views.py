@@ -188,17 +188,22 @@ class SMPTrackViewSet(View):
         serial = params.get('serial', None)
         if serial is not None:
             queryset = queryset.filter(item__serial__icontains=serial)
-        
-        
+                    
         dategte = params.get('date_greater', None)
         if dategte is not None:
-            date_gte = datetime.datetime.fromtimestamp(int(dategte) / 1e3)
-            queryset = queryset.filter(date__gte=date_gte)
+            try:
+                    date_gte = datetime.datetime.fromisoformat(dategte)
+                    queryset = queryset.filter(date__gte=date_gte)
+            except (ValueError, TypeError):
+                pass
         
         datelte = params.get('date_lesser', None)
         if datelte is not None:
-            date_lte = datetime.datetime.fromtimestamp(int(datelte) / 1e3)
-            queryset = queryset.filter(date__lte=date_lte)
+            try:
+                    date_lte = datetime.datetime.fromisoformat(datelte)
+                    queryset = queryset.filter(date__lte=date_lte)
+            except (ValueError, TypeError):
+                pass
         
         lastdate = params.get('lastdate', None)
         if str2bool(lastdate) :
@@ -224,7 +229,7 @@ class SMPTrackViewSet(View):
                 last_date= datetime.datetime.now()   
         dateLim = last_date+relativedelta(months=-setSMP)
         
-        return StockItemTracking.objects.prefetch_related('item').filter(date__gte=dateLim)
+        return StockItemTracking.objects.prefetch_related('item')   # .filter(date__gte=dateLim)
     
     def download_queryset(self, queryset, export_format):
         """Download the filtered queryset as a data file"""
