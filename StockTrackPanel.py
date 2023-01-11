@@ -80,6 +80,7 @@ class StockTrackPanel(PanelMixin, SettingsMixin, UrlsMixin, InvenTreePlugin):
                 }
             ]
             return panels
+        return []
 
 
 
